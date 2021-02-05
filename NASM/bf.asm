@@ -1,7 +1,11 @@
 
+
+
+
 extern exit 
 extern printf
 extern fopen, fclose, fgetc, fseek, ftell 
+extern __getmainargs
 
 
 section .data
@@ -9,26 +13,44 @@ section .data
 	FileName: db "main.bf", 0
 	ReadMode: db "r", 0
 	Command:  db ".", 0
-	Arr: times 100 dd 0
 	Index: dd 1
 	FileIndex: db 0
 
 
 section .bss
+	Arr resd 30000
 	FileHandler resb 1
+	buf resd 1
+	argc resd 1
+	argv resb 255
 
 section .text
 	_main:
 	    enter 0,0
 	    pusha
 
+	    push buf 
+	    push argv 
+	    push argc 
+	    call __getmainargs
 
 	    push ReadMode 
-	    push FileName 
+
+	    cmp dword [argc], 1
+	    jnz not_standart_file_name
+	    jz standart_file_name
+	  
+	  not_standart_file_name:
+	  	mov eax, [argv]
+	  	push dword [eax+4]
+	  	jmp call_open_file
+	  standart_file_name:
+	  	push FileName
+	  call_open_file: 
 	    call fopen 
 	    mov [FileHandler], eax 
 
-
+	    add esp, 16
 
 	   while_enter_char:
 
@@ -49,7 +71,6 @@ section .text
 		cmp DWORD [Command], "]"
 		jz command_while_end
 
-	    popa
 	    call exit
 
 
@@ -110,10 +131,11 @@ section .text
 		;Get a caracter from file 
 		enter 0, 0
 		pusha 
+
 	    push dword [FileHandler]
 	    call fgetc
-	    mov [Command], eax
 	    add esp, 4
+	    mov [Command], eax
 
 	    popa
 	    leave 
@@ -129,8 +151,7 @@ section .text
 		push eax
 	    push int_format
 	    call printf
-	    pop ecx
-	    pop ecx
+	    add esp, 8
 	    popa 
 	    leave 
 	    ret
@@ -140,10 +161,12 @@ section .text
 		pusha 
 		push Command
 		call printf 
-		pop ecx
+		add esp, 4
 		popa 
 		leave 
 		ret
 
 	finish_exit:
+	    popa
+		call fclose
 		call exit

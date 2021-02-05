@@ -7,25 +7,25 @@ int now_file_point = 0;
 
 std::fstream file;
 
-void Print(){
+inline void Print(){
 	std::cout << arr[now_point] << std::endl;
 }
 
-void Input(){
+inline void Input(){
 	std::cin >> arr[now_point];
 }
 
-void GoCycleEnd(){
+inline void GoCycleEnd(){
 	char command = '\0';
 	while(file >> command && command != ']'){}
 }
 
 
 int main(int size, char** file_name){
-	if(size)
+	if(size == 1)
 		file.open("main.bf");
 	else 
-		file.open(file_name[0]);
+		file.open(file_name[1]);
 
 	char command;
 	while(file >> command){
