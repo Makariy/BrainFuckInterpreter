@@ -1,16 +1,17 @@
 
 
-
-
 extern exit 
 extern printf
+extern scanf
 extern fopen, fclose, fgetc, fseek, ftell 
 extern __getmainargs
 
 
 section .data
 	int_format: db "%d", 10, 0
+	int_format_command_comma: db "%d", 0
 	FileName: db "main.bf", 0
+	NumberEntered: db "Number Entered: ", 0
 	ReadMode: db "r", 0
 	Command:  db ".", 0
 	Index: dd 1
@@ -23,6 +24,7 @@ section .bss
 	buf resd 1
 	argc resd 1
 	argv resb 255
+	CommandCommaNumber resb 32
 
 section .text
 	_main:
@@ -58,6 +60,8 @@ section .text
 		
 		cmp DWORD [Command], "."
 		jz command_dot
+		cmp DWORD [Command], ","
+		jz command_comma
 		cmp DWORD [Command], "<"
 		jz command_right
 		cmp DWORD [Command], ">"
@@ -104,6 +108,20 @@ section .text
 
 	command_dot:
 		call print_int
+		jmp while_enter_char
+
+	command_comma:
+		push CommandCommaNumber
+		push int_format_command_comma
+		call scanf
+		add esp, 8 
+
+		mov ecx, [Index]
+		imul ecx, 4
+
+		mov eax, dword [CommandCommaNumber]
+		mov DWORD [Arr+ecx], eax
+
 		jmp while_enter_char
 
 	command_add:
