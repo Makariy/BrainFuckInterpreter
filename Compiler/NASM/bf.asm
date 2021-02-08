@@ -11,7 +11,6 @@ section .data
 	int_format: db "%d", 10, 0
 	int_format_command_comma: db "%d", 0
 	FileName: db "main.bf", 0
-	NumberEntered: db "Number Entered: ", 0
 	ReadMode: db "r", 0
 	Command:  db ".", 0
 	Index: dd 1
