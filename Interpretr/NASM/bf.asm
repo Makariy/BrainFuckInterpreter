@@ -1,5 +1,4 @@
 
-
 extern exit 
 extern printf
 extern scanf
@@ -13,22 +12,25 @@ section .data
 	FileName: db "main.bf", 0
 	ReadMode: db "r", 0
 	Command:  db ".", 0
-	Index: dd 1
-	FileIndex: db 0
 
 
 section .bss
 	Arr resd 30000
-	FileHandler resb 1
-	buf resd 1
-	argc resd 1
-	argv resb 255
+	FileHandler resb 4
+	buf resd 4
+	argc resd 4
+	argv resb 256
 	CommandCommaNumber resb 32
+	Index: resb 4
+	FileIndex: resb 4
 
 section .text
 	_main:
 	    enter 0,0
 	    pusha
+
+	    mov dword [Index], 1
+	    mov dword [FileIndex], 0
 
 	    push buf 
 	    push argv 
@@ -57,6 +59,8 @@ section .text
 
 	    call get_char
 		
+		cmp DWORD [Command], " "
+		jz while_enter_char
 		cmp DWORD [Command], "."
 		jz command_dot
 		cmp DWORD [Command], ","
