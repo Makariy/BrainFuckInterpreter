@@ -19,7 +19,7 @@
 extern exit 
 extern printf
 extern scanf
-extern fopen, fclose, fgetc, fseek, ftell, feof 
+extern fopen, fclose, fgetc, fseek, ftell
 extern __getmainargs
 
 
