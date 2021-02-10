@@ -1,5 +1,6 @@
 ;
 ;			Copyright 2021 Makariy  
+;
 ;	Redistribuition and use of this code is 
 ; totaly allowed without any permissions of an author 
 ; or of his fiduciary. The Interpretr is not
@@ -13,13 +14,46 @@
 
 
 
+;
+; In BrainFuck language there are 8 commands:
+;
+;	. - Print the value of the current element 
+;		in array 
+;	, - Enter the value from command line to 
+;		the array 
+;	+ - Add 1 to the value of the current element  
+;		in array 
+;	- - Subtract 1 to the value of the current element  
+;		in array 
+;	< - Move pointer to the current element in array to the 
+;		next element 
+;	> - Move pointer to the current element in array to the
+;		past element 
+;	[ - Start the cycle if the value of the current element 
+;		in array is not zero 
+;	] - Go back to the start of cycle 
+;
+;	In this interpreter nested cycles are allowed! 	
+;
+
+
+;
+; 	By personal ideas I've introduced comments:
+;
+; There are two types of comments supported:
+;	'#' comments - one line comments. All the caracters on the line	
+;		after '#' symbol are not using to interpret
+;	'/' comments - are multi line comments. All the caracters 
+;		between the first and the second '/' are not using 
+;
+
 
 
 
 extern exit 
 extern printf
 extern scanf
-extern fopen, fclose, fgetc, fseek, ftell, feof 
+extern fopen, fclose, fgetc, fseek, ftell, fgets
 extern __getmainargs
 
 
@@ -33,31 +67,34 @@ section .data
 
 
 section .bss
-	Arr resd 30000				; An array for modifications 
-	FileHandler resb 4			; Pointer to a file provided by the C function fopen 
-	buf resd 4					; Buffer to get the command line arguments 
-	argc resd 4					; Count of command line arguments passed 
-	argv resb 256				; The arguments from command line 
-	CommandCommaNumber resb 32	; The number entered from the keyboard during 
+	Arr: resd 30000				; An array for modifications 
+	FileHandler: resb 4			; Pointer to a file provided by the C function fopen 
+	buf: resd 4					; Buffer to get the command line arguments 
+	argc: resd 4					; Count of command line arguments passed 
+	argv: resb 256				; The arguments from command line 
+	CommandCommaNumber: resb 32	; The number entered from the keyboard during 
 								; command ',' is executed 
 	Index: resb 4				; Index if the array of the application (Arr)
-	FileIndex: resb 4			; Current index in the oppened file 
 	FileEndIndex: resb 4		; Index of the end of the file 
 
 section .text
 	_main:
+		
 	    enter 0,0
 	    pusha
 
-	    ; Set up all indexes 
+	    ; Set up array index (Index) 
 	    mov dword [Index], 1
-	    mov dword [FileIndex], 0
 
 	    ; Get the arguments from the command line  
 	    push buf 
 	    push argv 
 	    push argc 
 	    call __getmainargs
+
+	   ; add esp, 12
+	   ; __stdcall, doesn't need to clear the stack
+
 
 	    push ReadMode 
 
@@ -75,12 +112,13 @@ section .text
 	  	push FileName
 
 	 call_open_file: 
-
 	    call fopen 
 	    mov [FileHandler], eax 
-
 	    add esp, 16
 
+
+
+	    ; Finding the file end index 
 
 	    ; Set file pointer to the next element 
 	    push 2	; SEEK_END 
@@ -89,12 +127,13 @@ section .text
 	    call fseek
 	    add esp, 12
 
-	    ; Get file end number 
+	    ; Get end of file index number  
 	    push dword [FileHandler]
 	    call ftell 
 	    mov [FileEndIndex], eax 
 	    add esp, 4
 
+	    ; After finding the end of file setting the pointer back 
 	    ; Set the file pointer back to the start 
 	    push 0
 	    push 0
@@ -103,34 +142,25 @@ section .text
 	    add esp, 12
 
 
+	    ; Start interpreting the file 
+	    call start 
+	    call finish_exit 
+
+	start:
+		; Get cycle start index number 
+	    push dword [FileHandler]
+	    call ftell 
+	    add esp, 4
+
+;-----------------------
+	    push eax  	; Save cycle start index in stack 
+;-----------------------
+
 	    ; This cycle is beeing executed while it gets the 
 	    ; symbols from the file 
 	   while_enter_char:
 
-	    call get_char ; Get symbol from the file 
-		
-		; Start comparing 
-		cmp DWORD [Command], " "
-		jz while_enter_char
-		cmp DWORD [Command], "."
-		jz command_dot
-		cmp DWORD [Command], ","
-		jz command_comma
-		cmp DWORD [Command], "<"
-		jz command_right
-		cmp DWORD [Command], ">"
-		jz command_left
-		cmp DWORD [Command], "+"
-		jz command_add
-		cmp DWORD [Command], "-"
-		jz command_sub
-		cmp DWORD [Command], "["
-		jz command_while_start
-		cmp DWORD [Command], "]"
-		jz command_while_end
-
-		
-		; Get current position in the file 
+	    ; Get current position in the file 
 		push dword [FileHandler]
 		call ftell
 		add esp, 4 
@@ -139,46 +169,133 @@ section .text
 		cmp dword [FileEndIndex], eax 
 		jz finish_exit   	; Then exit the programm
 
+
+
+	    call get_char ; Get symbol from the file 
+		; Start comparing 
+		  cmp DWORD [Command], "."
+		  jz command_dot
+		  cmp DWORD [Command], ","
+		  jz command_comma
+		  cmp DWORD [Command], "<"
+		  jz command_right
+		  cmp DWORD [Command], ">"
+		  jz command_left
+		  cmp DWORD [Command], "+"
+		  jz command_add
+		  cmp DWORD [Command], "-"
+		  jz command_sub
+		  cmp DWORD [Command], "["
+		  jz command_while_start 
+		  cmp DWORD [Command], "]"
+		  jz command_while_end
+
+		  ; Comments 
+		  cmp DWORD [Command], "#"
+		  jz enter_comment_line 
+		  cmp DWORD [Command], "/"
+		  jz enter_comment_multi_line
+
+
 		jmp while_enter_char   ; Continue the cycle 
+
+
+	; Pass all the caracters between '/' caracters
+	enter_comment_multi_line:
+		call get_char
+
+		cmp DWORD [Command], "/"
+		jnz enter_comment_multi_line
+
+		jmp while_enter_char
+
+	; Pass all the line after '#' caracter 
+	enter_comment_line:
+		call get_char
+	    
+		push dword [FileHandler]
+		call ftell
+		add esp, 4 
+		cmp dword [FileEndIndex], eax 
+		jz finish_exit   	
+
+		cmp DWORD [Command], 10
+		jnz enter_comment_line
+
+		jmp while_enter_char
 
 
 	; The operator '['
 	command_while_start:
+
 		mov ecx, [Index]
 	  	imul ecx, 4
 	  	cmp DWORD [Arr+ecx], 0
 	  	jz jump_cycle_end
 
-		push DWORD [FileHandler]
-		call ftell
-		sub eax, 1		
-		mov DWORD [FileIndex], eax
-
+	  	call start 
 		jmp while_enter_char
 
 
 	; Operator ']'
 	command_while_end:
+
+
+		mov ecx, [Index]
+	  	imul ecx, 4
+	  	cmp DWORD [Arr+ecx], 0
+	  	jz return 	; If the value in at the array (Arr)
+	  				; indexed by index (Index) is 0,
+	  				; then return from function and pop the 
+	  				; cycle end index 
+	  	jnz seek  	; Else: set the pointer in file to the 
+	  				; cycle start 
+
+	  return:
+	    add esp, 4	; Clear the cycle start index pushed before
+	  	ret
+
+	  seek:
+	  	pop eax
+		push eax
+
 		push 0
-		push DWORD [FileIndex]
+		push eax
 		push DWORD [FileHandler]
 		call fseek
+		add esp, 12
 		jmp while_enter_char
+
 
 	; Skips all between operator '[' and ']' included 
 	jump_cycle_end:
 		call get_char
+
 		cmp DWORD [Command], "]"
 		jnz jump_cycle_end
 
 		jmp while_enter_char
 
 	; Operator '.'
+	; Print the value of current element in the array (Arr)
 	command_dot:
-		call print_int
+
+		mov ebx, [Index]
+		imul ebx, 4
+		mov eax, DWORD [Arr+ebx]
+
+		push eax
+	    push int_format
+	    call printf
+	    add esp, 8
+
 		jmp while_enter_char
 
+
 	; Operator ','
+	; Gets integer from the keyboard 
+	; and sets the value of the element 
+	; on current index (Index) in the array (Arr)
 	command_comma:
 		push CommandCommaNumber
 		push int_format_command_comma
@@ -192,6 +309,7 @@ section .text
 		mov DWORD [Arr+ecx], eax
 
 		jmp while_enter_char
+
 
 	; Operator '+'
 	command_add:
@@ -231,23 +349,13 @@ section .text
 	    ret
 
 
-	; Print the value of current element in the array (Arr)
-	print_int:
-		mov ebx, [Index]
-		imul ebx, 4
-		mov eax, DWORD [Arr+ebx]
-
-		push eax
-	    push int_format
-	    call printf
-	    add esp, 8
-
-	    ret
-
-
 	; Exit the application 
 	finish_exit:
 	    popa
+
+	    push dword [FileHandler]
+	    call fclose 
+	    add esp, 4
 
 	    mov eax, 1
 	    mov ebx, 0

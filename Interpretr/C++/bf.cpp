@@ -1,34 +1,33 @@
-#include <iostream>
-#include <fstream>
+#include <stdio.h>
 
 int* arr = new int[30000]{0};
-int now_point = 0;
+int now_arr_point = 0;
 int now_file_point = 0;
+char command;
 
-std::fstream file;
+
+FILE* file;
 
 inline void Print(){
-	std::cout << arr[now_point] << std::endl;
+	printf("%d\n", arr[now_arr_point]);
 }
 
 inline void Input(){
-	std::cin >> arr[now_point];
+	scanf("%d", &arr[now_arr_point]);
 }
 
 inline void GoCycleEnd(){
-	char command = '\0';
-	while(file >> command && command != ']'){}
+	while(getc(file) >> command && command != ']'){}
 }
 
 
-int main(int size, char** file_name){
-	if(size == 1)
-		file.open("main.bf");
-	else 
-		file.open(file_name[1]);
 
-	char command;
-	while(file >> command){
+void start(){
+	int back_file_point = ftell(file);
+
+
+	while(!feof(file)){
+		command = getc(file);
 		switch(command){
 			case '.':
 				Print();
@@ -37,25 +36,43 @@ int main(int size, char** file_name){
 				Input();
 				break;
 			case '+':
-				arr[now_point]++;
+				arr[now_arr_point]++;
 				break;
 			case '-':
-				arr[now_point]--;
+				arr[now_arr_point]--;
 				break;
 			case '<':
-				now_point++;
+				now_arr_point++;
 				break;
 			case '>':
-				now_point--;
+				now_arr_point--;
 				break;
 			case '[':
-				if(arr[now_point] == 0)
+				if(arr[now_arr_point] == 0){
 					GoCycleEnd();
-				else now_file_point = int(file.tellg())-1;
-				break;
+				}
+				else {
+					start();
+					break;	
+				} 
 			case ']':
-				file.seekg(now_file_point, std::ios::beg);
-				break;
+				if(arr[now_arr_point] != 0){
+					fseek(file, back_file_point, 0);
+					break;
+				}
+				else  
+					return;
 		}
 	}
+}
+
+
+int main(int size, char** args){
+	if(size == 1)
+		file = fopen("main.bf", "r");
+	else 
+		file = fopen(args[1], "r");
+	start();
+	fclose(file);
+	return 0;
 }
