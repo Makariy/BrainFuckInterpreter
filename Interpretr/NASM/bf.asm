@@ -54,6 +54,7 @@ extern exit
 extern printf
 extern scanf
 extern fopen, fclose, fgetc, fseek, ftell, fgets
+extern fopen, fclose, fgetc, fseek, ftell
 extern __getmainargs
 
 
