@@ -29,7 +29,7 @@
 ;	> - Move pointer to the current element in array to the
 ;		past element 
 ;	[ - Start the cycle if the value of the current element 
-;		in array is not zero if it is zero, then go the ] caracter 
+;		in array is not zero, if it is zero, then go the ] caracter 
 ;	] - Go back to the start of cycle 
 ;
 ;	In this interpreter nested cycles are allowed! 	
