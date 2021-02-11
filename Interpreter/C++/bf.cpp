@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <iostream>
 
 int* arr = new int[30000]{0};
 int now_arr_point = 0;
@@ -16,10 +17,12 @@ inline void Input(){
 	scanf("%d", &arr[now_arr_point]);
 }
 
-inline void GoCycleEnd(){
-	while(getc(file) >> command && command != ']'){}
+inline void GoWhileNot(char ch){
+	command = getc(file);
+	while(command != ch && !feof(file)){
+		command = getc(file);
+	}
 }
-
 
 
 void start(){
@@ -49,7 +52,7 @@ void start(){
 				break;
 			case '[':
 				if(arr[now_arr_point] == 0){
-					GoCycleEnd();
+					GoWhileNot(']');
 				}
 				else {
 					start();
@@ -62,6 +65,12 @@ void start(){
 				}
 				else  
 					return;
+			case '#':
+				GoWhileNot('\n');
+				break;
+			case '/':
+				GoWhileNot('/');
+				break;
 		}
 	}
 }

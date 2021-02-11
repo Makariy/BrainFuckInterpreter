@@ -3,12 +3,11 @@
 ;
 ;	Redistribuition and use of this code is 
 ; totaly allowed without any permissions of an author 
-; or of his fiduciary. The Interpretr is not
+; or of his fiduciary. The Interpreter is not
 ; protected from any errors and we don't provide
 ; any guarantee of it's correct work. Any questions,
 ; issues or modifications we'll be very exited to 
-; listen to you.
-;
+; find it out in the comments 
 ;									Makariy
 
 
@@ -20,7 +19,7 @@
 ;	. - Print the value of the current element 
 ;		in array 
 ;	, - Enter the value from command line to 
-;		the array 
+;		the current element in the array 
 ;	+ - Add 1 to the value of the current element  
 ;		in array 
 ;	- - Subtract 1 to the value of the current element  
@@ -30,7 +29,7 @@
 ;	> - Move pointer to the current element in array to the
 ;		past element 
 ;	[ - Start the cycle if the value of the current element 
-;		in array is not zero 
+;		in array is not zero if it is zero, then go the ] caracter 
 ;	] - Go back to the start of cycle 
 ;
 ;	In this interpreter nested cycles are allowed! 	
@@ -42,9 +41,9 @@
 ;
 ; There are two types of comments supported:
 ;	'#' comments - one line comments. All the caracters on the line	
-;		after '#' symbol are not using to interpret
+;		after '#' symbol are not interpreting 
 ;	'/' comments - are multi line comments. All the caracters 
-;		between the first and the second '/' are not using 
+;		between the first and the second '/' are not interpreting  
 ;
 
 
@@ -354,11 +353,14 @@ section .text
 	finish_exit:
 	    popa
 
+
+	    ; Close the file 
 	    push dword [FileHandler]
 	    call fclose 
 	    add esp, 4
 
-	    mov eax, 1
+	    mov eax, 0
 	    mov ebx, 0
 
-	    call exit
+	    push eax  	; Push the return code 
+	    call exit	; Exit the application 
