@@ -3,7 +3,7 @@
 ;
 ;	Redistribuition and use of this code is 
 ; totaly allowed without any permissions of an author 
-; or of his fiduciary. The Interpreter is not
+; or his fiduciary. The Interpreter is not
 ; protected from any errors and we don't provide
 ; any guarantee of it's correct work. Any questions,
 ; issues or modifications we'll be very exited to 
