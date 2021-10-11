@@ -74,7 +74,7 @@ section .bss
 	argv: resb 256				; The arguments from command line 
 	CommandCommaNumber: resb 32	; The number entered from the keyboard during 
 								; command ',' is executed 
-	Index: resb 4				; Index if the array of the application (Arr)
+	Index: resb 4				; Index on the array (Arr)
 	FileEndIndex: resb 4		; Index of the end of the file 
 
 section .text
